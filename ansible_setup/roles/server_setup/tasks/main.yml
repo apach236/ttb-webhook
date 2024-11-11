@@ -1,0 +1,12 @@
+---
+# tasks file for new_server_settings
+#
+  
+- name: include ssh settings
+  import_tasks: ssh_settings.yml
+
+- name: update and upgrade 
+  import_tasks: install_packages.yml 
+
+- name: include ufw settings
+  import_tasks: ufw_settings.yml

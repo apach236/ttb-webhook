@@ -1,0 +1,15 @@
+name: training_tracker_bot
+services:
+  backend_bot:
+    image: learningreasons/training_tracker_bot:latest
+    volumes: 
+      - appdata:/app/data
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+
+volumes:
+  appdata:
+
+
+
+

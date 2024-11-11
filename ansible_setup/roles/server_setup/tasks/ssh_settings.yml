@@ -1,0 +1,24 @@
+---
+
+    - name: Disable root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#PermitRootLogin'
+        line: 'PermitRootLogin no'
+    - name: Enable entering by pubkey
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+    - name: Disable entering by password
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+    - name: Restart ssh service
+      service:
+        name: ssh
+        state: restarted

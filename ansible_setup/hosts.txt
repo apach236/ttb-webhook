@@ -1,0 +1,6 @@
+[ubuntu]
+ubuntu1 ansible_host=
+
+
+[all_servers:children]
+ubuntu

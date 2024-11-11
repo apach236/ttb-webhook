@@ -1,0 +1,9 @@
+---
+
+- name: Apply all settings on server and deploy project
+  hosts: ubuntu
+  become: yes
+
+  roles:
+    - { role: server_setup }
+
