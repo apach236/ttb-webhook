@@ -1,5 +1,6 @@
 .env
 data/*
+test*
 
 .mypy_cache/
 venv/
