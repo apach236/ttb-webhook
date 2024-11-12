@@ -8,6 +8,18 @@ class DatabaseConfig:
 
 
 @dataclass
+class WebhookConfig:
+    host: str
+    path: str
+
+
+@dataclass
+class WebappConfig:
+    host: str
+    port: int
+
+
+@dataclass
 class TgBot:
     token: str            # Токен для доступа к телеграм-боту
 
@@ -16,6 +28,8 @@ class TgBot:
 class Config:
     tg_bot: TgBot
     db: DatabaseConfig
+    webhook: WebhookConfig
+    webapp: WebappConfig
 
 
 def load_config(path: str | None = None) -> Config:
@@ -29,5 +43,13 @@ def load_config(path: str | None = None) -> Config:
         ),
         db=DatabaseConfig(
             db_uri=env('DB_URI')
+        ),
+        webhook=WebhookConfig(
+            host=env('WEBHOOK_HOST'),
+            path=env('WEBHOOK_PATH')
+        ),
+        webapp=WebappConfig(
+            host=env('WEBAPP_HOST'),
+            port=env('WEBAPP_PORT')
         )
     )
