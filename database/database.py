@@ -1,55 +1,59 @@
 
-import aiosqlite
+import asyncpg
+from config.config import Config, load_config
 
-from datetime import date
+config: Config = load_config()
+db_uri = config.db.db_uri
 
 
 async def create_table():
-    async with aiosqlite.connect('data/training.db') as db:
-        await db.execute('''CREATE TABLE IF NOT EXISTS training 
-                         (training_id integer primary key autoincrement, 
-                         user_id integer not null, 
-                         date text not null, 
+    conn = await asyncpg.connect(dsn=db_uri)
+    await conn.execute('''CREATE TABLE IF NOT EXISTS training 
+                         (training_id int generated always as identity primary key, 
+                         user_id int not null, 
+                         date timestamp default current_date, 
                          category text not null)''')
-        await db.commit()
+    print("Table created")
+    await conn.close()
 
 
 async def save_to_db(user_id: int, category: str):
-    async with aiosqlite.connect('data/training.db') as db:
-        await db.execute('INSERT INTO training(user_id, date, category) VALUES (?, ?, ?)',
-                         (user_id, str(date.today()), category))
-        await db.commit()
+    conn = await asyncpg.connect(dsn=db_uri)
+    await conn.execute('INSERT INTO training(user_id, category) VALUES ($1, $2)',
+                       user_id, category)
+    await conn.close()
 
 
 async def check_training_today(user_id: int) -> bool:
-    async with aiosqlite.connect('data/training.db') as db:
-        async with db.execute('''select date from training
-                            where user_id = ?
-                            order by date desc limit 1''',
-                              (user_id,)) as cursor:
-            last_date = await cursor.fetchone()
+    conn = await asyncpg.connect(dsn=db_uri)
+    last_date = await conn.fetchval('''select date from training
+                            where user_id = $1 
+                            and date = current_date''',
+                                    user_id)
+    await conn.close()
     if last_date is None:
         return False
     else:
-        return last_date[0] == str(date.today())
+        return True
 
 
-async def get_all_users() -> tuple:
-    users: tuple = tuple()
-    async with aiosqlite.connect('data/training.db') as db:
-        async with db.execute('select distinct user_id from training') as cursor:
-            async for user in cursor:
-                users += user
+async def get_all_users() -> list:
+    users: list = []
+    conn = await asyncpg.connect(dsn=db_uri)
+    all_users = await conn.fetch('select distinct user_id from training')
+    for user in all_users:
+        users.append(user['user_id'])
+    await conn.close()
     return users
 
 
-async def get_tarinings(user_id: int, period: int) -> list:
-    trainings: list = []
-    async with aiosqlite.connect('data/training.db') as db:
-        async with db.execute('''select date from training
-                                where user_id = ?
-                                order by date limit ?''',
-                              (user_id, period)) as cursor:
-            async for training in cursor:
-                trainings.append(training[0])
-    return trainings
+async def get_trainings(user_id: int, period: int) -> int:
+    conn = await asyncpg.connect(dsn=db_uri)
+    training_count = await conn.fetchval('''SELECT count(*)
+                                            FROM training
+                                            WHERE user_id = $1
+                                            AND date > 
+                                            (current_date - $2*interval '1 day') ''',
+                                         user_id, period)
+    await conn.close()
+    return training_count
